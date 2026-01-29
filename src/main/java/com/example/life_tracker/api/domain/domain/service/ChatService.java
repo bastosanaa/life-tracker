@@ -1,6 +1,5 @@
 package com.example.life_tracker.api.domain.domain.service;
 
-import com.example.life_tracker.api.domain.domain.DailyInfo;
 import com.example.life_tracker.api.domain.domain.PromptTemplates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -9,15 +8,8 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.UserMessage;
-import org.springframework.ai.converter.BeanOutputConverter;
-import org.springframework.ai.document.Document;
-import org.springframework.ai.vectorstore.SearchRequest;
-import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,7 +18,7 @@ import java.util.stream.Collectors;
 public class ChatService {
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
-    private final VectorStore vectorStore;
+    private final DailyInfoConsolidationService consolidationService;
 
     private static final int MAX_INTERACTIONS_BEFORE_SAVE = 3;
     private static final String CONVERSATION_ID = "user-default"; //TODO: adicionar id usuário logado
@@ -36,20 +28,22 @@ public class ChatService {
 
         chatMemory.add(CONVERSATION_ID, new UserMessage(userMessage));
 
+        String history = getHistoryAsText();
+
         int currentHistorySize = chatMemory.get(CONVERSATION_ID).size();
         boolean shouldConsolidate = (currentHistorySize / 2) >= MAX_INTERACTIONS_BEFORE_SAVE;
 
         if (shouldConsolidate) {
-            consolidateDailyInput();
-            chatOutput = "Entendido! Guardei essas informações no seu diário. Até amanhã!";
+            consolidationService.consolidateAsync(history);
+            chatOutput = "Entendido! Guardei essas informações no seu diário. Até amanhã!"; // TODO: melhorar a resposta final do chat levando em conta o contexto da conversa
+//            chatMemory.clear(CONVERSATION_ID);
         } else {
-            chatOutput = generateNextChatInteraction(userMessage);
+            chatOutput = generateNextChatInteraction(userMessage, history);
         }
       return chatOutput;
     }
 
-    private String generateNextChatInteraction(String userMessage) {
-        String history = getHistoryAsText();
+    private String generateNextChatInteraction(String userMessage, String history) {
 
         String prompt = PromptTemplates.CONVERSATION_MODE.formatted(history, userMessage);
         String chatMessage = chatClient.prompt()
@@ -74,27 +68,4 @@ public class ChatService {
                 .collect(Collectors.joining("\n"));
     }
 
-    private void consolidateDailyInput() {
-        String history = getHistoryAsText();
-        DailyInfo dailyInfo = extractMessageInfo(history);
-        System.out.println("DailyInfo: " + dailyInfo);
-
-        //TODO: salvar no banco
-    }
-
-    private DailyInfo extractMessageInfo( String history) {
-
-        var outputConverter = new BeanOutputConverter<>(DailyInfo.class);
-
-        String prompt = PromptTemplates.INFO_EXTRACTION.formatted(history, LocalDate.now());
-
-        DailyInfo dailyInfo = chatClient.prompt()
-                .user(u -> u.text(prompt)
-                .param("format_instructions", outputConverter.getFormat()))
-                .call()
-                .entity(outputConverter);
-
-        System.out.println(dailyInfo);
-        return dailyInfo;
-    };
 }
