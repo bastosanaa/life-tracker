@@ -1,29 +1,43 @@
 package com.example.life_tracker.api.domain.domain.service;
 
 import com.example.life_tracker.api.domain.domain.DailyInfo;
+import com.example.life_tracker.api.domain.domain.DailyInfoMapper;
 import com.example.life_tracker.api.domain.domain.PromptTemplates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
+import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class DailyInfoConsolidationService {
 
     private final ChatClient chatClient;
+    private final DailyInfoMapper dailyInfoMapper;
     private final VectorStore vectorStore;
 
     @Async
-    public void consolidateAsync(String chatHistorySnapshot) {
+    public void consolidateAsync(String chatHistorySnapshot, UUID userId) {
         System.out.println("Iniciando consolidação em background...");
 
-        DailyInfo dailyInfo = extractMessageInfo(chatHistorySnapshot);
-        System.out.println(dailyInfo);
+        try {
+            DailyInfo dailyInfo = extractMessageInfo(chatHistorySnapshot);
+            System.out.println(dailyInfo);
+            storeDailyInfo(dailyInfo, userId);
+        } catch (Exception e) {
+            System.err.println("Erro ao consolidar entrada");
+            e.printStackTrace();
+            return;
+        }
+
 
     }
 
@@ -37,6 +51,15 @@ public class DailyInfoConsolidationService {
                         .param("format_instructions", outputConverter.getFormat()))
                 .call()
                 .entity(outputConverter);
+    }
+
+    private void storeDailyInfo(DailyInfo dailyInfo, UUID userId) {
+        List<Document> documents = dailyInfo.items().stream()
+                .map(item -> dailyInfoMapper.toDocument(item, userId))
+                .filter(Objects::nonNull)
+                .toList();
+
+        vectorStore.add(documents);
     }
 
 }
