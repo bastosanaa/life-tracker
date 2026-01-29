@@ -3,6 +3,10 @@ package com.example.life_tracker.api.domain.domain;
 public class PromptTemplates {
     public static final String INFO_EXTRACTION = """
         Você é um assistente de IA focado em capturar memórias detalhadas e ricas.
+        
+        HISTÓRICO DA CONVERSA RECENTE:
+        %s
+        
         CONTEXTO ATUAL:
         Data de hoje: %s
     
@@ -34,6 +38,13 @@ public class PromptTemplates {
    
             4. 'categoria' e 'sentimento':
                - Inferir com base no contexto emocional, não apenas nas palavras-chave.
+               
+           ATENÇÃO CRÍTICA À FORMATAÇÃO JSON:
+              - A saída DEVE ser um JSON estritamente válido.
+              - Ao gerar a lista 'items', certifique-se de FECHAR cada objeto com '}' antes de iniciar o próximo.
+              // ADICIONE AS BARRAS INVERTIDAS ABAIXO:
+              - Exemplo Correto: [\\{"summary": "A"\\}, \\{"summary": "B"\\}]
+              - Exemplo ERRADO: [\\{"summary": "A", "summary": "B"\\}]
    
             MENSAGEM DO USUÁRIO:
             %s

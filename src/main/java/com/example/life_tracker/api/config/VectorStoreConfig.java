@@ -1,6 +1,8 @@
 package com.example.life_tracker.api.config;
 
 import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.ai.chat.memory.ChatMemory;
+import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +10,8 @@ import org.springframework.ai.google.genai.GoogleGenAiEmbeddingConnectionDetails
 import org.springframework.ai.google.genai.text.GoogleGenAiTextEmbeddingModel;
 import org.springframework.ai.google.genai.text.GoogleGenAiTextEmbeddingOptions;
 import org.springframework.context.annotation.Configuration;
+
+//TODO: alterar nome desta classe já que possui configs nao apenas do armazenamento dos vetores
 
 @Configuration
 public class VectorStoreConfig {
@@ -40,5 +44,4 @@ public class VectorStoreConfig {
     public ChatClient chatClient(ChatClient.Builder builder) {
         return builder.build();
     }
-
 }

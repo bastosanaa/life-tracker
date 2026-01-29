@@ -17,7 +17,7 @@ public class ChatController {
     private final ChatService chatService;
 
     @GetMapping
-    DailyInfo generation(@RequestParam(value = "userPrompt")String userPrompt) {
+    String generation(@RequestParam(value = "userPrompt")String userPrompt) {
         return this.chatService.handleUserMessage(userPrompt);
     }
 }
