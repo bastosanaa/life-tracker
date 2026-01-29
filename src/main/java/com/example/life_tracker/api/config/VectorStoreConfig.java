@@ -35,6 +35,7 @@ public class VectorStoreConfig {
 
         var options = GoogleGenAiTextEmbeddingOptions.builder()
                 .model(modelName)
+                .dimensions(768)
                 .build();
 
         return new GoogleGenAiTextEmbeddingModel(connectionDetails, options);

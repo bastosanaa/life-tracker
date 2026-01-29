@@ -11,6 +11,7 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -20,8 +21,10 @@ public class ChatService {
     private final ChatMemory chatMemory;
     private final DailyInfoConsolidationService consolidationService;
 
-    private static final int MAX_INTERACTIONS_BEFORE_SAVE = 3;
+    private static final int MAX_INTERACTIONS_BEFORE_SAVE = 1;
+
     private static final String CONVERSATION_ID = "user-default"; //TODO: adicionar id usuário logado
+    private static final UUID DEFAULT_USER_ID = UUID.fromString("9cfd9fa2-110e-49a3-8148-65daa18d9c68");
 
     public String handleUserMessage(String userMessage) {
         String chatOutput;
@@ -34,7 +37,7 @@ public class ChatService {
         boolean shouldConsolidate = (currentHistorySize / 2) >= MAX_INTERACTIONS_BEFORE_SAVE;
 
         if (shouldConsolidate) {
-            consolidationService.consolidateAsync(history);
+            consolidationService.consolidateAsync(history, DEFAULT_USER_ID);
             chatOutput = "Entendido! Guardei essas informações no seu diário. Até amanhã!"; // TODO: melhorar a resposta final do chat levando em conta o contexto da conversa
 //            chatMemory.clear(CONVERSATION_ID);
         } else {
