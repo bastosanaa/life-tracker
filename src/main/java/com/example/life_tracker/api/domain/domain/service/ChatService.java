@@ -28,35 +28,65 @@ public class ChatService {
     private final ChatMemory chatMemory;
     private final VectorStore vectorStore;
 
+    private static final int MAX_INTERACTIONS_BEFORE_SAVE = 3;
     private static final String CONVERSATION_ID = "user-default"; //TODO: adicionar id usuário logado
 
     public String handleUserMessage(String userMessage) {
-
-        String history = getChatHistory(userMessage);
-        DailyInfo extractedInfo = extractMessageInfo(userMessage, history);
-
-        String responseText;
-
-        if (extractedInfo.pendingQuestions() != null && !extractedInfo.pendingQuestions().isEmpty()) {
-            // Cenario A: Informação incompleta. A IA devolve a pergunta gerada.
-            responseText = extractedInfo.pendingQuestions().get(0);
-        } else {
-            // Cenario B: Informação completa. Confirmação.
-            // Poderíamos chamar o LLM aqui para gerar um agradecimento mais natural se quisesse.
-            responseText = "Entendido! Guardei essas informações no seu diário. Mais alguma coisa?";
-        }
+        String chatOutput;
 
         chatMemory.add(CONVERSATION_ID, new UserMessage(userMessage));
-        chatMemory.add(CONVERSATION_ID, new AssistantMessage(responseText));
 
-        return responseText;
+        int currentHistorySize = chatMemory.get(CONVERSATION_ID).size();
+        boolean shouldConsolidate = (currentHistorySize / 2) >= MAX_INTERACTIONS_BEFORE_SAVE;
+
+        if (shouldConsolidate) {
+            consolidateDailyInput();
+            chatOutput = "Entendido! Guardei essas informações no seu diário. Até amanhã!";
+        } else {
+            chatOutput = generateNextChatInteraction(userMessage);
+        }
+      return chatOutput;
     }
 
-    private DailyInfo extractMessageInfo(String message, String history) {
+    private String generateNextChatInteraction(String userMessage) {
+        String history = getHistoryAsText();
+
+        String prompt = PromptTemplates.CONVERSATION_MODE.formatted(history, userMessage);
+        String chatMessage = chatClient.prompt()
+                .user(u -> u.text(prompt))
+                .call()
+                .content();
+
+        assert chatMessage != null;
+        chatMemory.add(CONVERSATION_ID, new AssistantMessage(chatMessage));
+
+        return chatMessage;
+    }
+
+    private String getHistoryAsText() {
+        List<Message> history = chatMemory.get(CONVERSATION_ID);
+
+        return history.stream()
+                .map(m -> {
+                    String role = m.getMessageType() == MessageType.USER ? "Usuário" : "IA";
+                    return role + ": " + m.getText();
+                })
+                .collect(Collectors.joining("\n"));
+    }
+
+    private void consolidateDailyInput() {
+        String history = getHistoryAsText();
+        DailyInfo dailyInfo = extractMessageInfo(history);
+        System.out.println("DailyInfo: " + dailyInfo);
+
+        //TODO: salvar no banco
+    }
+
+    private DailyInfo extractMessageInfo( String history) {
 
         var outputConverter = new BeanOutputConverter<>(DailyInfo.class);
 
-        String prompt = PromptTemplates.INFO_EXTRACTION.formatted(history,LocalDate.now(), message);
+        String prompt = PromptTemplates.INFO_EXTRACTION.formatted(history, LocalDate.now());
 
         DailyInfo dailyInfo = chatClient.prompt()
                 .user(u -> u.text(prompt)
@@ -67,39 +97,4 @@ public class ChatService {
         System.out.println(dailyInfo);
         return dailyInfo;
     };
-
-    private String getChatHistory(String userMessageText) {
-        List<Message> history = chatMemory.get(CONVERSATION_ID);
-
-        return history.stream()
-                .map(m -> (m.getMessageType() == MessageType.USER ? "Usuário: " : "IA: ") + m.getText())
-                .collect(Collectors.joining("\n"));
-
-    }
-
-//    private List<Document> retrieveSimilarDocuments(String searchRequest) {
-//        return  vectorStore.similaritySearch(
-//                SearchRequest.builder()
-//                        .query(searchRequest)
-//                        .topK(3)
-//                        .build()
-//        );
-//    }
-
-//    private String augmentContext(List<Document> documents) {
-//        return documents.stream()
-//                .map(Document::getText)
-//                .collect(Collectors.joining("\n\n"));
-//    }
-//
-//    private String generateAnswer(String userPrompt , String context) {
-//
-//        String systemMessage = PromptTemplates.CHAT.formatted(context);
-//
-//        return chatClient.prompt()
-//                .system(systemMessage)
-//                .user(userPrompt)
-//                .call()
-//                .content();
-//    }
 }
