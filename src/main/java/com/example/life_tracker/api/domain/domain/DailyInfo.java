@@ -3,8 +3,7 @@ package com.example.life_tracker.api.domain.domain;
 import java.util.List;
 
 public record DailyInfo(
-        List<InfoItem> items,
-        List<String> pendingQuestions
+        List<InfoItem> items
 ) {
     public record InfoItem(
             String summary,
