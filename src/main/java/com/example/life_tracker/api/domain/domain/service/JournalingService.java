@@ -16,10 +16,10 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class ChatService {
+public class JournalingService {
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
-    private final DailyInfoConsolidationService consolidationService;
+    private final JournalingIngestionService consolidationService;
 
     private static final int MAX_INTERACTIONS_BEFORE_SAVE = 1;
 
@@ -37,7 +37,7 @@ public class ChatService {
         boolean shouldConsolidate = (currentHistorySize / 2) >= MAX_INTERACTIONS_BEFORE_SAVE;
 
         if (shouldConsolidate) {
-            consolidationService.consolidateAsync(history, DEFAULT_USER_ID);
+            consolidationService.ingest(history, DEFAULT_USER_ID);
             chatOutput = "Entendido! Guardei essas informações no seu diário. Até amanhã!"; // TODO: melhorar a resposta final do chat levando em conta o contexto da conversa
 //            chatMemory.clear(CONVERSATION_ID);
         } else {

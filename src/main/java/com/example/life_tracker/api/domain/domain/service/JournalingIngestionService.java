@@ -1,7 +1,7 @@
 package com.example.life_tracker.api.domain.domain.service;
 
-import com.example.life_tracker.api.domain.domain.DailyInfo;
-import com.example.life_tracker.api.domain.domain.DailyInfoMapper;
+import com.example.life_tracker.api.domain.domain.model.DailyInfo;
+import com.example.life_tracker.api.domain.domain.mapper.DailyInfoMapper;
 import com.example.life_tracker.api.domain.domain.PromptTemplates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
@@ -18,14 +18,14 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class DailyInfoConsolidationService {
+public class JournalingIngestionService {
 
     private final ChatClient chatClient;
     private final DailyInfoMapper dailyInfoMapper;
     private final VectorStore vectorStore;
 
     @Async
-    public void consolidateAsync(String chatHistorySnapshot, UUID userId) {
+    public void ingest(String chatHistorySnapshot, UUID userId) {
         System.out.println("Iniciando consolidação em background...");
 
         try {

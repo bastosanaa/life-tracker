@@ -1,5 +1,6 @@
-package com.example.life_tracker.api.domain.domain;
+package com.example.life_tracker.api.domain.domain.mapper;
 
+import com.example.life_tracker.api.domain.domain.model.DailyInfo;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Component;
 

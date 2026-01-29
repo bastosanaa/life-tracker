@@ -1,4 +1,4 @@
-package com.example.life_tracker.api.domain.domain;
+package com.example.life_tracker.api.domain.domain.model;
 
 import java.util.List;
 
