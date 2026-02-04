@@ -9,9 +9,11 @@ import org.springframework.ai.chat.messages.AssistantMessage;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.MessageType;
 import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -23,6 +25,9 @@ public class ChatService {
 
     private final ChatClient chatClient;
     private final ChatMemory chatMemory;
+
+    @Value("${app.mock-ai:false}")
+    private boolean mockAiEnabled;
 
     private static final String CONVERSATION_ID_PREFIX = "chat-";
 
@@ -47,6 +52,7 @@ public class ChatService {
 
     public int getCurrentHistorySize(UUID userId) {
         String conversationId = getConversationId(userId);
+        log.info("Current history size {}", chatMemory.get(conversationId).size());
         return chatMemory.get(conversationId).size();
     }
 
@@ -78,16 +84,21 @@ public class ChatService {
     private Flux<String> streamMessageReply(String prompt, String conversationId) {
         StringBuffer contentBuffer = new StringBuffer();
 
-        return chatClient.prompt()
-                .user(u -> u.text(prompt))
-                .stream()
-                .content()
-                .doOnNext(contentBuffer::append)
-                .doOnComplete(() -> {
-                    String fullResponse = contentBuffer.toString();
-                    saveAssistantMessage(conversationId, fullResponse);
-                })
-                .doOnError(e -> log.error("Erro na geração de resposta", e));
+            //MOCKANDO SAÍDA DA AI
+            return Flux.just("Isso ", "é ", "uma ", "resposta ", "simulada ", "do ", "modo ", "de ", "teste.")
+                    .delayElements(Duration.ofMillis(100)) // Simula delay da rede
+                    .doOnComplete(() -> saveAssistantMessage(conversationId, "Isso é uma resposta simulada do modo de teste."));
+
+//        return chatClient.prompt()
+//                .user(u -> u.text(prompt))
+//                .stream()
+//                .content()
+//                .doOnNext(contentBuffer::append)
+//                .doOnComplete(() -> {
+//                    String fullResponse = contentBuffer.toString();
+//                    saveAssistantMessage(conversationId, fullResponse);
+//                })
+//                .doOnError(e -> log.error("Erro na geração de resposta", e));
     }
 
     private void saveAssistantMessage(String conversationId, String message) {

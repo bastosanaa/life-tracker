@@ -7,7 +7,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
+import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.ai.vectorstore.filter.FilterExpressionBuilder;
+import org.springframework.ai.vectorstore.filter.Filter.Expression;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -39,6 +42,23 @@ public class JournalingIngestionService {
         }
 
 
+    }
+
+    public boolean hasJournaledToday(UUID userId) {
+        String todayDate = LocalDate.now().toString();
+
+
+        FilterExpressionBuilder filter = new FilterExpressionBuilder();
+        Expression expression = filter.and(
+                filter.eq("userId", userId.toString()),
+                filter.eq("date", todayDate)
+        ).build();
+
+        List<Document> result = vectorStore.similaritySearch(
+                SearchRequest.builder().query("check").filterExpression(expression).topK(1).build()
+        );
+
+        return !result.isEmpty();
     }
 
     private DailyInfo extractMessageInfo(String history) {

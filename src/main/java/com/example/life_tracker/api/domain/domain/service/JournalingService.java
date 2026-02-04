@@ -41,6 +41,9 @@ public class JournalingService {
     }
 
     public Flux<String> handleUserMessage(UUID userId, String userMessage) {
+
+        if (!canInteract(userId)) return Flux.just(ReplyMessages.JOURNAL_ALREADY_EXISTS);
+
         sessionManager.keepAlive(userId);
 
         if (isBelowInteractionsLimit(userId)) {
@@ -51,6 +54,16 @@ public class JournalingService {
         return chatService.processMessage(userId, userMessage);
 
     }
+
+    private boolean canInteract(UUID userId) {
+        boolean hasActiveSession = sessionManager.hasActiveSession(userId);
+
+        if (hasActiveSession) return true;
+
+        boolean hasJournaled = ingestionService.hasJournaledToday(userId);
+        return !hasJournaled;
+    }
+
 
     private boolean isBelowInteractionsLimit(UUID userId) {
         int historySize = chatService.getCurrentHistorySize(userId);
