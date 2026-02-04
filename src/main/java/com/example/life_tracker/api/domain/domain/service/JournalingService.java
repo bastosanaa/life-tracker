@@ -1,22 +1,13 @@
 package com.example.life_tracker.api.domain.domain.service;
 
-import com.example.life_tracker.api.domain.domain.PromptTemplates;
 import com.example.life_tracker.api.domain.domain.ReplyMessages;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.ChatClient;
-import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.messages.AssistantMessage;
-import org.springframework.ai.chat.messages.Message;
-import org.springframework.ai.chat.messages.MessageType;
-import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
 import javax.annotation.PostConstruct;
-import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -28,7 +19,7 @@ public class JournalingService {
     private final JournalingIngestionService ingestionService;
     private final SseNotificationService sseNotificationService;
 
-    private static final int MAX_INTERACTIONS_BEFORE_SAVE = 1;
+    private static final int MAX_INTERACTIONS_BEFORE_SAVE = 3;
 
     private static final String CONVERSATION_ID = "user-default"; //TODO: adicionar id usuário logado
 
