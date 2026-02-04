@@ -10,7 +10,8 @@ public record DailyInfo(
             Category category,
             Feeling feeling,
             String date,
-            boolean futureScheduling
+            boolean futureScheduling,
+            String futureMessage
     ) {}
 
     public enum Category {WORK, STUDIES, HEALTH, ENTERTAINMENT, RELATIONSHIPS, OTHER}

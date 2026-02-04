@@ -14,22 +14,28 @@ public class DailyInfoMapper {
     private static final String META_FEELING = "feeling";
     private static final String META_DATE = "date";
     private static final String META_FUTURE_SCHEDULING = "futureScheduling";
+    private static final String META_FUTURE_MESSAGE = "futureMessage";
 
     public Document toDocument(DailyInfo.InfoItem item, UUID userId) {
         if (item == null) return null;
 
         String categoryName = item.category() != null ? item.category().name() : "OTHER";
         String feelingName = item.feeling() != null ? item.feeling().name() : "NEUTRAL";
-        String dateVal = item.date() != null ? item.date() : "Unknown";
+
+        String dateVal = item.date();
+        String summary = item.summary();
+
+        String safeFutureMessage = item.futureMessage() != null ? item.futureMessage() : "";
 
         Map<String, Object> metadata = Map.of(
                 META_USER_ID, userId,
                 META_CATEGORY, categoryName,
                 META_FEELING, feelingName,
                 META_DATE, dateVal,
-                META_FUTURE_SCHEDULING, item.futureScheduling()
+                META_FUTURE_SCHEDULING, item.futureScheduling(),
+                META_FUTURE_MESSAGE, safeFutureMessage
         );
 
-        return new Document(item.summary(), metadata);
+        return new Document(summary, metadata);
     }
 }

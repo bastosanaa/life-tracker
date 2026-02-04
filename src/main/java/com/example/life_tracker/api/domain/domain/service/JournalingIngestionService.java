@@ -3,6 +3,7 @@ package com.example.life_tracker.api.domain.domain.service;
 import com.example.life_tracker.api.domain.domain.model.DailyInfo;
 import com.example.life_tracker.api.domain.domain.mapper.DailyInfoMapper;
 import com.example.life_tracker.api.domain.domain.PromptTemplates;
+import com.example.life_tracker.api.domain.domain.validator.DailyInfoValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
@@ -26,6 +27,7 @@ public class JournalingIngestionService {
     private final ChatClient chatClient;
     private final DailyInfoMapper dailyInfoMapper;
     private final VectorStore vectorStore;
+    private final DailyInfoValidator dailyInfoValidator;
 
     @Async
     public void ingest(String chatHistorySnapshot, UUID userId) {
@@ -33,6 +35,7 @@ public class JournalingIngestionService {
 
         try {
             DailyInfo dailyInfo = extractMessageInfo(chatHistorySnapshot);
+            dailyInfoValidator.validate(dailyInfo);
             System.out.println(dailyInfo);
             storeDailyInfo(dailyInfo, userId);
         } catch (Exception e) {
