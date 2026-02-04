@@ -19,7 +19,7 @@ import java.util.UUID;
 @RequestMapping("/chat")
 public class ChatController {
 
-    private final JournalingService chatService;
+    private final JournalingService journalService;
     private final SseNotificationService sseNotificationService;
 
     private static final UUID DEFAULT_USER_ID = UUID.fromString("9cfd9fa2-110e-49a3-8148-65daa18d9c68");
@@ -29,8 +29,13 @@ public class ChatController {
         return sseNotificationService.addEmitter(DEFAULT_USER_ID);
     }
 
+    @GetMapping(value = "/close")
+    Flux<String> closeConversation() {
+        return journalService.manuallyCloseConversation(DEFAULT_USER_ID);
+    }
+
     @GetMapping
     Flux<String> generation(@RequestParam(value = "userPrompt")String userPrompt) {
-        return this.chatService.handleUserMessage(DEFAULT_USER_ID, userPrompt);
+        return this.journalService.handleUserMessage(DEFAULT_USER_ID, userPrompt);
     }
 }

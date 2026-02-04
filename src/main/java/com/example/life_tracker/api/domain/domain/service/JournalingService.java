@@ -55,6 +55,14 @@ public class JournalingService {
 
     }
 
+    public Flux<String> manuallyCloseConversation(UUID userId) {
+        boolean hasActiveSession = sessionManager.hasActiveSession(userId);
+
+        if (!hasActiveSession) throw new IllegalStateException("Não há sessão ativa para encerrar.");
+        consolidateAndClose(userId);
+        return Flux.just(ReplyMessages.MANUALLY_CONSOLIDATE);
+    }
+
     private boolean canInteract(UUID userId) {
         boolean hasActiveSession = sessionManager.hasActiveSession(userId);
 

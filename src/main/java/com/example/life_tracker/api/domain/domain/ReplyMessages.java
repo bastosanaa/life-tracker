@@ -4,7 +4,9 @@ public class ReplyMessages {
 
     public static final String INACTIVITY_WARNING = "{\\\"message\\\": \\\"Você ainda está aí? Salvaremos seu diário em 10 minutos.\\\"}";
 
-    public static final String CONSOLIDATE = "O papo rendeu! Salvei nosso histórico por segurança. Podemos continuar...";
+    public static final String CONSOLIDATE = "O papo rendeu! Vou registrar vou registrar tudo o que falamos agora no seu diário. Obrigado por compartilhar seu dia comigo. Até logo!";
+
+    public static final String MANUALLY_CONSOLIDATE = "Entendido! Vou registrar todas as suas memórias de hoje no diário. Obrigado por compartilhar seu dia comigo. Até a próxima!";
 
     public static final String JOURNAL_ALREADY_EXISTS = "Você já registrou seu dia hoje! Volte amanhã para contar mais novidades.";
 }
