@@ -55,7 +55,7 @@ public class SseNotificationServiceTest {
     @Test
     @DisplayName("Não deve lançar erro ao tentar enviar aviso para um utilizador desconectado")
     void shouldNotThrowErrorWhenSendingWarningToDisconnectedUser() {
-        assertDoesNotThrow(() -> sseNotificationService.trySendInactivityWarning(userId));
+        assertDoesNotThrow(() -> sseNotificationService.sendInactivityWarning(userId));
     }
 
     @Test
@@ -63,7 +63,7 @@ public class SseNotificationServiceTest {
     void shouldSendWarningSuccessfully() {
         sseNotificationService.addEmitter(userId);
 
-        assertDoesNotThrow(() -> sseNotificationService.trySendInactivityWarning(userId));
+        assertDoesNotThrow(() -> sseNotificationService.sendInactivityWarning(userId));
 
         @SuppressWarnings("unchecked")
         Map<UUID, SseEmitter> activeEmitters = (Map<UUID, SseEmitter>) ReflectionTestUtils.getField(sseNotificationService, "activeEmitters");

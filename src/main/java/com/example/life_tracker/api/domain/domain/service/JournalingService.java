@@ -70,7 +70,7 @@ public class JournalingService {
     }
 
     private void sendInactivityWarning(UUID userId) {
-        sseNotificationService.trySendInactivityWarning(userId);
+        sseNotificationService.sendInactivityWarning(userId);
     }
 
     private void consolidateAndClose(UUID userId) {

@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,25 +39,35 @@ public class SseNotificationService {
         }
     }
 
-    public void trySendInactivityWarning(UUID userId) {
+    public void sendInactivityWarning(UUID userId) {
         SseEmitter emitter = activeEmitters.get(userId);
 
-        boolean isUserConnected =  emitter != null;
-        if (!isUserConnected) {
-            log.debug("Tentativa de enviar aviso para usuário desconectado: {}", userId);
+        if (!isUserConnected(emitter)) {
+            log.debug("Warning cancelled: user disconnected. ID: {}", userId);
             return;
         }
 
+        sendWarning(userId, emitter);
+    }
+
+    private boolean isUserConnected(SseEmitter emitter) {
+        return emitter != null;
+    }
+
+    private void sendWarning(UUID userId, SseEmitter emitter) {
         try {
-            emitter.send(SseEmitter.event()
-                    .name(EVENT_NAME_WARNING)
-                    .data(ReplyMessages.INACTIVITY_WARNING));
-            log.info("Aviso de inatividade enviado para usuário: {}", userId);
-        } catch (Exception IOException) {
-            log.warn("Falha ao enviar aviso SSE. Removendo usuário: {}", userId);
+            emitWarningEvent(userId, emitter);
+        } catch (Exception e) {
+            log.warn("Failed to send SSE warning. Removing user: {}", userId);
             disconnectUser(userId);
         }
+    }
 
+    private void emitWarningEvent(UUID userId, SseEmitter emitter) throws IOException {
+        emitter.send(SseEmitter.event()
+                .name(EVENT_NAME_WARNING)
+                .data(ReplyMessages.INACTIVITY_WARNING));
+        log.info("Inactivity warning sent successfully to user: {}", userId);
     }
 
     private void setCleaningCallbacks(SseEmitter emitter, UUID userId) {
