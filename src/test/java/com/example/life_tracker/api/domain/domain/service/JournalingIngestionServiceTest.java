@@ -91,7 +91,7 @@ class JournalingIngestionServiceTest {
 
         List<Document> savedDocuments = documentListCaptor.getValue();
         assertEquals(1, savedDocuments.size());
-        assertEquals("Studied Spring Boot", savedDocuments.getFirst().getText());
+        assertEquals("Estudou Spring Boot", savedDocuments.getFirst().getText());
     }
 
     @Test

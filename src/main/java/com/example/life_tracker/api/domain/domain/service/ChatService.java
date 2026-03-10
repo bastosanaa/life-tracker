@@ -75,7 +75,7 @@ public class ChatService {
 
         return history.stream()
                 .map(m -> {
-                    String role = m.getMessageType() == MessageType.USER ? "User" : "AI";
+                    String role = m.getMessageType() == MessageType.USER ? "Usuário" : "IA";
                     return role + ": " + m.getText();
                 })
                 .collect(Collectors.joining("\n"));
