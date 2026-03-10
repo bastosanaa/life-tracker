@@ -18,24 +18,23 @@ public class SseNotificationService {
     private final Map<UUID, SseEmitter> activeEmitters = new ConcurrentHashMap<>();
 
     public SseEmitter addEmitter(UUID userId) {
-        // Long.MAX_VALUE means server doesn't close connection by time
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
 
         setCleaningCallbacks(emitter, userId);
 
         activeEmitters.put(userId, emitter);
-        log.info("Nova conexão SSE registrada para usuário: {}", userId);
+        log.info("New SSE connection registered for user: {}", userId);
 
         return emitter;
     };
 
     public void removeEmitter(UUID userId) {
         SseEmitter emitter = activeEmitters.remove(userId);
-        boolean isUserConnected =  emitter != null;
+        boolean isUserConnected = emitter != null;
 
         if (isUserConnected) {
             emitter.complete();
-            log.info("Conexão SSE encerrada manualmente para usuário: {}", userId);
+            log.info("SSE connection manually closed for user: {}", userId);
         }
     }
 
@@ -72,18 +71,18 @@ public class SseNotificationService {
 
     private void setCleaningCallbacks(SseEmitter emitter, UUID userId) {
         emitter.onCompletion(() -> {
-            log.debug("SSE completado para usuário: {}", userId);
+            log.debug("SSE completed for user: {}", userId);
             disconnectUser(userId);
         });
 
         emitter.onTimeout(() -> {
-            log.debug("SSE timeout para usuário: {}", userId);
+            log.debug("SSE timeout for user: {}", userId);
             emitter.complete();
             disconnectUser(userId);
         });
 
         emitter.onError((e) -> {
-            log.error("Erro na conexão SSE do usuário {}: {}", userId, e.getMessage());
+            log.error("SSE connection error for user {}: {}", userId, e.getMessage());
             emitter.completeWithError(e);
             disconnectUser(userId);
         });

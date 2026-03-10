@@ -39,7 +39,7 @@ public class ChatServiceTest {
     private ArgumentCaptor<Message> messageCaptor;
 
     @Test
-    @DisplayName("Deve processar a mensagem do utilizador chamando a API do Spring AI e guardando no histórico")
+    @DisplayName("Should process the user message by calling the Spring AI API and saving it to the history")
     void shouldProcessMessageAndReturnFlux() {
         when(chatMemory.get(conversationId)).thenReturn(List.of());
 
@@ -67,7 +67,7 @@ public class ChatServiceTest {
     }
 
     @Test
-    @DisplayName("Deve devolver o snapshot do histórico formatado em texto para a IA")
+    @DisplayName("Should return the history snapshot formatted as text for the AI")
     void shouldReturnFormattedHistorySnapshot() {
         List<Message> mockHistory = List.of(
                 new UserMessage("Fui correr de manhã"),
@@ -82,7 +82,7 @@ public class ChatServiceTest {
     }
 
     @Test
-    @DisplayName("Deve limpar o histórico da memória corretamente")
+    @DisplayName("Should correctly clear the memory history")
     void shouldClearHistory() {
         chatService.clearHistory(userId);
 
@@ -90,7 +90,7 @@ public class ChatServiceTest {
     }
 
     @Test
-    @DisplayName("Deve devolver o tamanho atual do histórico")
+    @DisplayName("Should return the current history size")
     void shouldReturnCurrentHistorySize() {
         List<Message> mockHistory = List.of(
                 new UserMessage("msg1"),

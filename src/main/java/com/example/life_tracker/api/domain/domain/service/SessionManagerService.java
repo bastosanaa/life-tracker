@@ -26,7 +26,7 @@ public class SessionManagerService {
     @PostConstruct
     public void init() {
         this.sessionCache = Caffeine.newBuilder()
-                .expireAfterWrite(Duration.ofSeconds(10)) //TODO: TROCAR PARA 10MIN
+                .expireAfterWrite(Duration.ofSeconds(20)) //TODO: CHANGE TO 10MIN
                 .scheduler(Scheduler.systemScheduler())
                 .removalListener((UUID key, SessionState state, RemovalCause cause) -> {
                     if (cause == RemovalCause.EXPIRED) {
@@ -54,14 +54,14 @@ public class SessionManagerService {
     }
 
     private void handleExpiration(UUID userId, SessionState state) {
-        log.info("Ciclo de tempo expirou para usuário {} no estado {}", userId, state);
+        log.info("Time cycle expired for user {} in state {}", userId, state);
 
         switch (state) {
             case SessionState.ACTIVE -> {
                 if (onWarningCallback != null) onWarningCallback.accept(userId);
                 sessionCache.put(userId, SessionState.WARNED);
             }
-            case SessionState.WARNED ->  {
+            case SessionState.WARNED -> {
                 if (onExpirationCallback != null) onExpirationCallback.accept(userId);
                 sessionCache.invalidate(userId);
             }

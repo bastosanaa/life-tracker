@@ -73,7 +73,7 @@ class JournalingIngestionServiceTest {
     }
 
     @Test
-    @DisplayName("Deve extrair, validar, mapear e salvar a informação diária no VectorStore com sucesso")
+    @DisplayName("Should extract, validate, map and save the daily info in the VectorStore successfully")
     void shouldIngestSuccessfully() {
         when(chatClient.prompt()).thenReturn(requestSpec);
         when(requestSpec.user(any(Consumer.class))).thenReturn(requestSpec);
@@ -83,7 +83,7 @@ class JournalingIngestionServiceTest {
 
         when(dailyInfoMapper.toDocument(any(DailyInfo.InfoItem.class), eq(userId))).thenReturn(mockDocument);
 
-        ingestionService.ingest("Histórico de conversa", userId);
+        ingestionService.ingest("Conversation history", userId);
 
         verify(dailyInfoValidator).validate(mockDailyInfo);
 
@@ -91,59 +91,59 @@ class JournalingIngestionServiceTest {
 
         List<Document> savedDocuments = documentListCaptor.getValue();
         assertEquals(1, savedDocuments.size());
-        assertEquals("Estudou Spring Boot", savedDocuments.getFirst().getText());
+        assertEquals("Studied Spring Boot", savedDocuments.getFirst().getText());
     }
 
     @Test
-    @DisplayName("Deve abortar o processo silenciosamente (capturar exceção) se a IA falhar na extração")
+    @DisplayName("Should silently abort the process (catch exception) if AI fails during extraction")
     void shouldCatchExceptionAndNotSaveWhenExtractionFails() {
         when(chatClient.prompt()).thenReturn(requestSpec);
         when(requestSpec.user(any(Consumer.class))).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(callResponseSpec);
         when(callResponseSpec.entity(any(BeanOutputConverter.class)))
-                .thenThrow(new RuntimeException("Erro de parse da IA"));
+                .thenThrow(new RuntimeException("AI parse error"));
 
-        ingestionService.ingest("Histórico com problema", userId);
+        ingestionService.ingest("History with issue", userId);
 
         verify(dailyInfoValidator, never()).validate(any());
         verify(vectorStore, never()).add(anyList());
     }
 
     @Test
-    @DisplayName("Deve abortar o processo se os dados retornados pela IA forem barrados pelo Validador")
+    @DisplayName("Should abort the process if data returned by the AI is rejected by the Validator")
     void shouldCatchExceptionAndNotSaveWhenValidationFails() {
         when(chatClient.prompt()).thenReturn(requestSpec);
         when(requestSpec.user(any(Consumer.class))).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(callResponseSpec);
         when(callResponseSpec.entity(any(BeanOutputConverter.class))).thenReturn(mockDailyInfo);
 
-        doThrow(new IllegalArgumentException("Item sem data definida."))
+        doThrow(new IllegalArgumentException("Item without a defined date."))
                 .when(dailyInfoValidator).validate(mockDailyInfo);
 
-        ingestionService.ingest("Histórico com problema", userId);
+        ingestionService.ingest("History with issue", userId);
 
         verify(vectorStore, never()).add(anyList());
     }
 
     @Test
-    @DisplayName("Deve retornar TRUE quando encontrar documentos para o utilizador no dia de hoje")
+    @DisplayName("Should return TRUE when documents are found for the user on today's date")
     void shouldReturnTrueWhenHasJournaledToday() {
         when(vectorStore.similaritySearch(any(SearchRequest.class)))
                 .thenReturn(List.of(mockDocument));
 
         boolean result = ingestionService.hasJournaledToday(userId);
 
-        assertTrue(result, "Deve retornar true pois encontrou diário hoje");
+        assertTrue(result, "Should return true because a journal entry was found for today");
     }
 
     @Test
-    @DisplayName("Deve retornar FALSE quando não encontrar documentos no banco para o utilizador hoje")
+    @DisplayName("Should return FALSE when no documents are found in the database for the user today")
     void shouldReturnFalseWhenHasNotJournaledToday() {
         when(vectorStore.similaritySearch(any(SearchRequest.class)))
                 .thenReturn(List.of());
 
         boolean result = ingestionService.hasJournaledToday(userId);
 
-        assertFalse(result, "Deve retornar false pois não tem diário hoje");
+        assertFalse(result, "Should return false because no journal entry was found for today");
     }
 }

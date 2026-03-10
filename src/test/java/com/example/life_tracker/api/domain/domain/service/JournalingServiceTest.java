@@ -33,12 +33,12 @@ public class JournalingServiceTest {
 
     @BeforeEach
     void setup() {
-        // Inicializa callbacks (simula o @PostConstruct)
+        // Initialize callbacks (simulates @PostConstruct)
         journalingService.init();
     }
 
     @Test
-    @DisplayName("Deve bloquear usuário se já tem entrada hoje e não tem sessão ativa")
+    @DisplayName("Should block user if they already have an entry today and have no active session")
     void shouldBlockUserIfJournalExistsToday() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(false);
         when(ingestionService.hasJournaledToday(userId)).thenReturn(true);
@@ -54,76 +54,75 @@ public class JournalingServiceTest {
     }
 
     @Test
-    @DisplayName("Deve permitir conversa se usuário já tem sessão ativa (mesmo com entrada no banco)")
+    @DisplayName("Should allow conversation if the user already has an active session (even with an entry in the database)")
     void shouldAllowIfSessionIsActive() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(true);
         when(chatService.getCurrentHistorySize(userId)).thenReturn(0);
-        when(chatService.processMessage(any(), any())).thenReturn(Flux.just("Resposta da IA"));
+        when(chatService.processMessage(any(), any())).thenReturn(Flux.just("AI Response"));
 
-        Flux<String> response = journalingService.handleUserMessage(userId, "Continuando...");
+        Flux<String> response = journalingService.handleUserMessage(userId, "Continuing...");
 
         StepVerifier.create(response)
-                .expectNext("Resposta da IA")
+                .expectNext("AI Response")
                 .verifyComplete();
 
         verify(sessionManager).keepAlive(userId);
     }
 
     @Test
-    @DisplayName("Deve permitir a conversa se não existe entrada no banco")
+    @DisplayName("Should allow conversation if no entry exists in the database")
     void shouldAllowUserIfJournalDoesntExistToday() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(false);
         when(ingestionService.hasJournaledToday(userId)).thenReturn(false);
 
         when(chatService.processMessage(eq(userId), anyString()))
-                .thenReturn(Flux.just("Resposta da IA"));
+                .thenReturn(Flux.just("AI Response"));
 
-        Flux<String> response = journalingService.handleUserMessage(userId, "Oi");
+        Flux<String> response = journalingService.handleUserMessage(userId, "Hi");
 
         StepVerifier.create(response)
-                .expectNext("Resposta da IA")
+                .expectNext("AI Response")
                 .verifyComplete();
 
         verify(sessionManager).keepAlive(userId);
     }
 
     @Test
-    @DisplayName("Deve encerrar automaticamente quando atingir o limite de mensagens")
+    @DisplayName("Should automatically consolidate when the message limit is reached")
     void shouldAutoConsolidateWhenLimitReached() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(true);
 
         int limitInMessages = MAX_INTERACTIONS_BEFORE_SAVE * 2;
         when(chatService.getCurrentHistorySize(userId)).thenReturn(limitInMessages);
 
-        when(chatService.getHistorySnapshot(userId)).thenReturn("Histórico Completo");
+        when(chatService.getHistorySnapshot(userId)).thenReturn("Full History");
 
-        Flux<String> response = journalingService.handleUserMessage(userId, "Mais uma msg");
+        Flux<String> response = journalingService.handleUserMessage(userId, "One more message");
 
         StepVerifier.create(response)
                 .expectNext(ReplyMessages.CONSOLIDATE)
                 .verifyComplete();
 
-        // Verifica se chamou a consolidação e limpou tudo
         verify(ingestionService).ingest(anyString(), eq(userId));
         verify(chatService).clearHistory(userId);
         verify(sessionManager).invalidate(userId);
-        verify(sseNotificationService).removeEmitter(userId); // Adicionado para garantir limpeza SSE
+        verify(sseNotificationService).removeEmitter(userId);
     }
 
     @Test
-    @DisplayName("Não deve encerrar automaticamente quando estiver abaixo do limite de mensagens")
+    @DisplayName("Should not automatically consolidate when below the message limit")
     void shouldNotAutoConsolidateWhenLimitNotReached() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(true);
         when(chatService.getCurrentHistorySize(userId)).thenReturn(1);
 
-        // CORREÇÃO DO NPE: Ensinamos o Mock a responder para o fluxo normal
+        // NPE FIX: Teaching the Mock to respond for the normal flow
         when(chatService.processMessage(eq(userId), anyString()))
-                .thenReturn(Flux.just("Resposta da IA"));
+                .thenReturn(Flux.just("AI Response"));
 
-        Flux<String> response = journalingService.handleUserMessage(userId, "Mais uma msg");
+        Flux<String> response = journalingService.handleUserMessage(userId, "One more message");
 
         StepVerifier.create(response)
-                .expectNext("Resposta da IA")
+                .expectNext("AI Response")
                 .verifyComplete();
 
         verify(ingestionService, never()).ingest(anyString(), eq(userId));
@@ -132,10 +131,10 @@ public class JournalingServiceTest {
     }
 
     @Test
-    @DisplayName("Deve consolidar e encerrar manualmente quando solicitado pelo usuário")
+    @DisplayName("Should manually consolidate and close when requested by the user")
     void shouldManuallyConsolidateWhenRequested() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(true);
-        when(chatService.getHistorySnapshot(userId)).thenReturn("Histórico para Salvar");
+        when(chatService.getHistorySnapshot(userId)).thenReturn("History to Save");
 
         Flux<String> response = journalingService.manuallyCloseConversation(userId);
 
@@ -143,30 +142,29 @@ public class JournalingServiceTest {
                 .expectNext(ReplyMessages.MANUALLY_CONSOLIDATE)
                 .verifyComplete();
 
-        verify(ingestionService).ingest("Histórico para Salvar", userId);
+        verify(ingestionService).ingest("History to Save", userId);
         verify(chatService).clearHistory(userId);
         verify(sessionManager).invalidate(userId);
         verify(sseNotificationService).removeEmitter(userId);
     }
 
     @Test
-    @DisplayName("Deve lançar erro ao tentar encerrar manualmente sem sessão ativa")
+    @DisplayName("Should throw an error when trying to manually close without an active session")
     void shouldThrowErrorWhenManualClosingWithoutSession() {
         when(sessionManager.hasActiveSession(userId)).thenReturn(false);
 
-        // Verifica o Fail Fast
+        // Verifies Fail Fast
         assertThrows(IllegalStateException.class, () ->
                 journalingService.manuallyCloseConversation(userId)
         );
 
-        // Garante que não fez consolidação indevida
         verify(ingestionService, never()).ingest(anyString(), any());
         verify(chatService, never()).clearHistory(any());
         verify(sessionManager, never()).invalidate(any());
     }
 
     @Test
-    @DisplayName("Deve registrar os callbacks no SessionManager ao inicializar")
+    @DisplayName("Should register callbacks in SessionManager on initialization")
     void shouldRegisterCallbacksOnInit() {
         verify(sessionManager).setCallbacks(any(), any());
     }

@@ -22,23 +22,23 @@ public class SseNotificationServiceTest {
     }
 
     @Test
-    @DisplayName("Deve adicionar um novo SseEmitter e registá-lo no mapa de utilizadores ativos")
+    @DisplayName("Should add a new SseEmitter and register it in the active users map")
     void shouldAddEmitter() {
         SseEmitter emitter = sseNotificationService.addEmitter(userId);
 
-        assertNotNull(emitter, "O SseEmitter retornado não deve ser nulo");
-        assertEquals(Long.MAX_VALUE, emitter.getTimeout(), "O timeout deve ser configurado para Long.MAX_VALUE");
+        assertNotNull(emitter, "The returned SseEmitter must not be null");
+        assertEquals(Long.MAX_VALUE, emitter.getTimeout(), "Timeout must be set to Long.MAX_VALUE");
 
         @SuppressWarnings("unchecked")
         Map<UUID, SseEmitter> activeEmitters = (Map<UUID, SseEmitter>) ReflectionTestUtils.getField(sseNotificationService, "activeEmitters");
 
         assertNotNull(activeEmitters);
-        assertTrue(activeEmitters.containsKey(userId), "O mapa deve conter o ID do utilizador");
-        assertEquals(emitter, activeEmitters.get(userId), "O emitter guardado deve ser o mesmo que foi retornado");
+        assertTrue(activeEmitters.containsKey(userId), "The map must contain the user ID");
+        assertEquals(emitter, activeEmitters.get(userId), "The stored emitter must be the same one that was returned");
     }
 
     @Test
-    @DisplayName("Deve remover o SseEmitter do mapa e completá-lo")
+    @DisplayName("Should remove the SseEmitter from the map and complete it")
     void shouldRemoveEmitter() {
         sseNotificationService.addEmitter(userId);
 
@@ -49,17 +49,17 @@ public class SseNotificationServiceTest {
 
         sseNotificationService.removeEmitter(userId);
 
-        assertFalse(activeEmitters.containsKey(userId), "O ID do utilizador deve ser removido do mapa");
+        assertFalse(activeEmitters.containsKey(userId), "The user ID must be removed from the map");
     }
 
     @Test
-    @DisplayName("Não deve lançar erro ao tentar enviar aviso para um utilizador desconectado")
+    @DisplayName("Should not throw an error when sending a warning to a disconnected user")
     void shouldNotThrowErrorWhenSendingWarningToDisconnectedUser() {
         assertDoesNotThrow(() -> sseNotificationService.sendInactivityWarning(userId));
     }
 
     @Test
-    @DisplayName("Deve enviar aviso com sucesso para um utilizador conectado")
+    @DisplayName("Should successfully send a warning to a connected user")
     void shouldSendWarningSuccessfully() {
         sseNotificationService.addEmitter(userId);
 
@@ -68,6 +68,6 @@ public class SseNotificationServiceTest {
         @SuppressWarnings("unchecked")
         Map<UUID, SseEmitter> activeEmitters = (Map<UUID, SseEmitter>) ReflectionTestUtils.getField(sseNotificationService, "activeEmitters");
         assertNotNull(activeEmitters);
-        assertTrue(activeEmitters.containsKey(userId), "O utilizador deve continuar no mapa após o envio com sucesso");
+        assertTrue(activeEmitters.containsKey(userId), "The user must remain in the map after a successful send");
     }
 }

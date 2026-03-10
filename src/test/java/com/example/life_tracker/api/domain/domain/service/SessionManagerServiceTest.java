@@ -35,14 +35,14 @@ class SessionManagerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve retornar false quando não houver sessão ativa para o usuário")
+    @DisplayName("Should return false when there is no active session for the user")
     void shouldReturnFalseWhenNoSession() {
         boolean hasSession = sessionManager.hasActiveSession(userId);
         assertFalse(hasSession);
     }
 
     @Test
-    @DisplayName("Deve criar uma sessão e mantê-la ativa ao chamar keepAlive")
+    @DisplayName("Should create a session and keep it active when calling keepAlive")
     void shouldCreateSessionOnKeepAlive() {
         sessionManager.keepAlive(userId);
 
@@ -51,7 +51,7 @@ class SessionManagerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve retornar true quando houver sessão ativa para o usuário")
+    @DisplayName("Should return true when there is an active session for the user")
     void shouldReturnTrueWhenSession() {
         sessionManager.keepAlive(userId);
         boolean hasSession = sessionManager.hasActiveSession(userId);
@@ -59,7 +59,7 @@ class SessionManagerServiceTest {
     }
 
     @Test
-    @DisplayName("Deve remover a sessão instantaneamente ao chamar invalidate")
+    @DisplayName("Should immediately remove the session when calling invalidate")
     void shouldRemoveSessionOnInvalidate() {
         sessionManager.keepAlive(userId);
         assertTrue(sessionManager.hasActiveSession(userId));
@@ -70,7 +70,7 @@ class SessionManagerServiceTest {
     }
 
     @Test
-    @DisplayName("Ciclo 1: Deve acionar onWarning e mudar estado para WARNED na primeira expiração")
+    @DisplayName("Cycle 1: Should trigger onWarning and change state to WARNED on first expiration")
     void shouldTriggerWarningOnFirstExpiration() {
         sessionManager.keepAlive(userId);
 
@@ -83,7 +83,7 @@ class SessionManagerServiceTest {
     }
 
     @Test
-    @DisplayName("Ciclo 2: Deve acionar onExpiration e invalidar sessão na segunda expiração (WARNED)")
+    @DisplayName("Cycle 2: Should trigger onExpiration and invalidate session on second expiration (WARNED)")
     void shouldTriggerExpirationAndRemoveOnSecondExpiration() {
         sessionManager.keepAlive(userId);
 

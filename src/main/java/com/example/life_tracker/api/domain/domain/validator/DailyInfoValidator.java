@@ -12,7 +12,7 @@ import java.time.format.DateTimeParseException;
 public class DailyInfoValidator {
     public void validate(DailyInfo dailyInfo) {
         if (dailyInfo == null || dailyInfo.items() == null || dailyInfo.items().isEmpty()) {
-            throw new IllegalArgumentException("A IA retornou dados vazios ou nulos.");
+            throw new IllegalArgumentException("AI returned empty or null data.");
         }
 
         dailyInfo.items().forEach(this::validateCriticalFields);
@@ -20,16 +20,16 @@ public class DailyInfoValidator {
 
     private void validateCriticalFields(DailyInfo.InfoItem item) {
         if (item.summary() == null || item.summary().trim().isEmpty()) {
-            throw new IllegalArgumentException("Item sem resumo (summary) detectado.");
+            throw new IllegalArgumentException("Item with missing summary detected.");
         }
 
         if (item.date() == null) {
-            throw new IllegalArgumentException("Item sem data definida.");
+            throw new IllegalArgumentException("Item without a defined date.");
         }
         try {
             LocalDate.parse(item.date());
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Data inválida recebida da IA: " + item.date());
+            throw new IllegalArgumentException("Invalid date received from AI: " + item.date());
         }
     }
 }

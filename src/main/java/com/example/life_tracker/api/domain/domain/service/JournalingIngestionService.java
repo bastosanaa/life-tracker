@@ -31,7 +31,7 @@ public class JournalingIngestionService {
 
     @Async
     public void ingest(String chatHistorySnapshot, UUID userId) {
-        System.out.println("Iniciando consolidação em background...");
+        System.out.println("Starting background consolidation...");
 
         try {
             DailyInfo dailyInfo = extractMessageInfo(chatHistorySnapshot);
@@ -39,12 +39,10 @@ public class JournalingIngestionService {
             System.out.println(dailyInfo);
             storeDailyInfo(dailyInfo, userId);
         } catch (Exception e) {
-            System.err.println("Erro ao consolidar entrada");
+            System.err.println("Error consolidating entry");
             e.printStackTrace();
             return;
         }
-
-
     }
 
     public boolean hasJournaledToday(UUID userId) {

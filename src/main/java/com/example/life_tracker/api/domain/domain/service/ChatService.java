@@ -75,7 +75,7 @@ public class ChatService {
 
         return history.stream()
                 .map(m -> {
-                    String role = m.getMessageType() == MessageType.USER ? "Usuário" : "IA";
+                    String role = m.getMessageType() == MessageType.USER ? "User" : "AI";
                     return role + ": " + m.getText();
                 })
                 .collect(Collectors.joining("\n"));
@@ -84,21 +84,21 @@ public class ChatService {
     private Flux<String> streamMessageReply(String prompt, String conversationId) {
         StringBuffer contentBuffer = new StringBuffer();
 
-            //MOCKANDO SAÍDA DA AI
-            return Flux.just("Isso ", "é ", "uma ", "resposta ", "simulada ", "do ", "modo ", "de ", "teste.")
-                    .delayElements(Duration.ofMillis(100)) // Simula delay da rede
-                    .doOnComplete(() -> saveAssistantMessage(conversationId, "Isso é uma resposta simulada do modo de teste."));
+            //MOCKING AI
+//            return Flux.just("Isso ", "é ", "uma ", "resposta ", "simulada ", "do ", "modo ", "de ", "teste.")
+//                    .delayElements(Duration.ofMillis(100)) // Simula delay da rede
+//                    .doOnComplete(() -> saveAssistantMessage(conversationId, "Isso é uma resposta simulada do modo de teste."));
 
-//        return chatClient.prompt()
-//                .user(u -> u.text(prompt))
-//                .stream()
-//                .content()
-//                .doOnNext(contentBuffer::append)
-//                .doOnComplete(() -> {
-//                    String fullResponse = contentBuffer.toString();
-//                    saveAssistantMessage(conversationId, fullResponse);
-//                })
-//                .doOnError(e -> log.error("Erro na geração de resposta", e));
+        return chatClient.prompt()
+                .user(u -> u.text(prompt))
+                .stream()
+                .content()
+                .doOnNext(contentBuffer::append)
+                .doOnComplete(() -> {
+                    String fullResponse = contentBuffer.toString();
+                    saveAssistantMessage(conversationId, fullResponse);
+                })
+                .doOnError(e -> log.error("Error generating response", e));
     }
 
     private void saveAssistantMessage(String conversationId, String message) {
