@@ -26,7 +26,7 @@ public class SseNotificationService {
         log.info("New SSE connection registered for user: {}", userId);
 
         return emitter;
-    };
+    }
 
     public void removeEmitter(UUID userId) {
         SseEmitter emitter = activeEmitters.remove(userId);

@@ -1,7 +1,7 @@
 package com.example.life_tracker;
 
-import com.example.life_tracker.IT.IntegrationTestBase;
-import com.example.life_tracker.IT.TestConfig;
+import com.example.life_tracker.integration.IntegrationTestBase;
+import com.example.life_tracker.integration.TestConfig;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;

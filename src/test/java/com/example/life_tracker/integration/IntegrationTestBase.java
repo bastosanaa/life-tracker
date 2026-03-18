@@ -1,4 +1,4 @@
-package com.example.life_tracker.IT;
+package com.example.life_tracker.integration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.test.context.ActiveProfiles;

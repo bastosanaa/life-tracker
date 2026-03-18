@@ -1,4 +1,4 @@
-package com.example.life_tracker.IT;
+package com.example.life_tracker.integration;
 
 import org.springframework.ai.document.Document;
 import org.springframework.ai.embedding.EmbeddingModel;

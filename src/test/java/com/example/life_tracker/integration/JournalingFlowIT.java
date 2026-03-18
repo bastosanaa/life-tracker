@@ -1,4 +1,4 @@
-package com.example.life_tracker.IT;
+package com.example.life_tracker.integration;
 import com.example.life_tracker.api.domain.domain.model.DailyInfo;
 import com.example.life_tracker.api.domain.domain.service.ChatService;
 import com.example.life_tracker.api.domain.domain.service.JournalingIngestionService;
