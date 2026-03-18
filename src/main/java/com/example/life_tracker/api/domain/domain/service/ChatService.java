@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 
-import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -84,21 +83,17 @@ public class ChatService {
     private Flux<String> streamMessageReply(String prompt, String conversationId) {
         StringBuffer contentBuffer = new StringBuffer();
 
-            //MOCKANDO SAÍDA DA AI
-            return Flux.just("Isso ", "é ", "uma ", "resposta ", "simulada ", "do ", "modo ", "de ", "teste.")
-                    .delayElements(Duration.ofMillis(100)) // Simula delay da rede
-                    .doOnComplete(() -> saveAssistantMessage(conversationId, "Isso é uma resposta simulada do modo de teste."));
 
-//        return chatClient.prompt()
-//                .user(u -> u.text(prompt))
-//                .stream()
-//                .content()
-//                .doOnNext(contentBuffer::append)
-//                .doOnComplete(() -> {
-//                    String fullResponse = contentBuffer.toString();
-//                    saveAssistantMessage(conversationId, fullResponse);
-//                })
-//                .doOnError(e -> log.error("Erro na geração de resposta", e));
+        return chatClient.prompt()
+                .user(u -> u.text(prompt))
+                .stream()
+                .content()
+                .doOnNext(contentBuffer::append)
+                .doOnComplete(() -> {
+                    String fullResponse = contentBuffer.toString();
+                    saveAssistantMessage(conversationId, fullResponse);
+                })
+                .doOnError(e -> log.error("Error generating response", e));
     }
 
     private void saveAssistantMessage(String conversationId, String message) {

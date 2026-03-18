@@ -5,6 +5,7 @@ import com.example.life_tracker.api.domain.domain.mapper.DailyInfoMapper;
 import com.example.life_tracker.api.domain.domain.PromptTemplates;
 import com.example.life_tracker.api.domain.domain.validator.DailyInfoValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
@@ -21,6 +22,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class JournalingIngestionService {
 
@@ -31,20 +33,16 @@ public class JournalingIngestionService {
 
     @Async
     public void ingest(String chatHistorySnapshot, UUID userId) {
-        System.out.println("Iniciando consolidação em background...");
+        log.info("Starting background consolidation for user {}", userId);
 
         try {
             DailyInfo dailyInfo = extractMessageInfo(chatHistorySnapshot);
             dailyInfoValidator.validate(dailyInfo);
-            System.out.println(dailyInfo);
             storeDailyInfo(dailyInfo, userId);
         } catch (Exception e) {
-            System.err.println("Erro ao consolidar entrada");
             e.printStackTrace();
-            return;
+            log.error("Error consolidating entry for user {}", userId, e);
         }
-
-
     }
 
     public boolean hasJournaledToday(UUID userId) {

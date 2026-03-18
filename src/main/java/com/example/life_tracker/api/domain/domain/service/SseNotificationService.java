@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,62 +18,71 @@ public class SseNotificationService {
     private final Map<UUID, SseEmitter> activeEmitters = new ConcurrentHashMap<>();
 
     public SseEmitter addEmitter(UUID userId) {
-        // Long.MAX_VALUE means server doesn't close connection by time
         SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
 
         setCleaningCallbacks(emitter, userId);
 
         activeEmitters.put(userId, emitter);
-        log.info("Nova conexão SSE registrada para usuário: {}", userId);
+        log.info("New SSE connection registered for user: {}", userId);
 
         return emitter;
-    };
+    }
 
     public void removeEmitter(UUID userId) {
         SseEmitter emitter = activeEmitters.remove(userId);
-        boolean isUserConnected =  emitter != null;
+        boolean isUserConnected = emitter != null;
 
         if (isUserConnected) {
             emitter.complete();
-            log.info("Conexão SSE encerrada manualmente para usuário: {}", userId);
+            log.info("SSE connection manually closed for user: {}", userId);
         }
     }
 
-    public void trySendInactivityWarning(UUID userId) {
+    public void sendInactivityWarning(UUID userId) {
         SseEmitter emitter = activeEmitters.get(userId);
 
-        boolean isUserConnected =  emitter != null;
-        if (!isUserConnected) {
-            log.debug("Tentativa de enviar aviso para usuário desconectado: {}", userId);
+        if (!isUserConnected(emitter)) {
+            log.debug("Warning cancelled: user disconnected. ID: {}", userId);
             return;
         }
 
+        sendWarning(userId, emitter);
+    }
+
+    private boolean isUserConnected(SseEmitter emitter) {
+        return emitter != null;
+    }
+
+    private void sendWarning(UUID userId, SseEmitter emitter) {
         try {
-            emitter.send(SseEmitter.event()
-                    .name(EVENT_NAME_WARNING)
-                    .data(ReplyMessages.INACTIVITY_WARNING));
-            log.info("Aviso de inatividade enviado para usuário: {}", userId);
-        } catch (Exception IOException) {
-            log.warn("Falha ao enviar aviso SSE. Removendo usuário: {}", userId);
+            emitWarningEvent(userId, emitter);
+        } catch (Exception e) {
+            log.warn("Failed to send SSE warning. Removing user: {}", userId, e);
             disconnectUser(userId);
         }
+    }
 
+    private void emitWarningEvent(UUID userId, SseEmitter emitter) throws IOException {
+        emitter.send(SseEmitter.event()
+                .name(EVENT_NAME_WARNING)
+                .data(ReplyMessages.INACTIVITY_WARNING));
+        log.info("Inactivity warning sent successfully to user: {}", userId);
     }
 
     private void setCleaningCallbacks(SseEmitter emitter, UUID userId) {
         emitter.onCompletion(() -> {
-            log.debug("SSE completado para usuário: {}", userId);
+            log.debug("SSE completed for user: {}", userId);
             disconnectUser(userId);
         });
 
         emitter.onTimeout(() -> {
-            log.debug("SSE timeout para usuário: {}", userId);
+            log.debug("SSE timeout for user: {}", userId);
             emitter.complete();
             disconnectUser(userId);
         });
 
         emitter.onError((e) -> {
-            log.error("Erro na conexão SSE do usuário {}: {}", userId, e.getMessage());
+            log.error("SSE connection error for user {}: {}", userId, e.getMessage());
             emitter.completeWithError(e);
             disconnectUser(userId);
         });

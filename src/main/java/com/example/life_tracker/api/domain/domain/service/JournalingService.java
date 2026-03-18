@@ -49,7 +49,7 @@ public class JournalingService {
     public Flux<String> manuallyCloseConversation(UUID userId) {
         boolean hasActiveSession = sessionManager.hasActiveSession(userId);
 
-        if (!hasActiveSession) throw new IllegalStateException("Não há sessão ativa para encerrar.");
+        if (!hasActiveSession) throw new IllegalStateException("No active session to close.");
         consolidateAndClose(userId);
         return Flux.just(ReplyMessages.MANUALLY_CONSOLIDATE);
     }
@@ -70,11 +70,11 @@ public class JournalingService {
     }
 
     private void sendInactivityWarning(UUID userId) {
-        sseNotificationService.trySendInactivityWarning(userId);
+        sseNotificationService.sendInactivityWarning(userId);
     }
 
     private void consolidateAndClose(UUID userId) {
-        log.info("Iniciando consolidação para usuário {}", userId);
+        log.info("Starting consolidation for user {}", userId);
 
         String history = chatService.getHistorySnapshot(userId);
 

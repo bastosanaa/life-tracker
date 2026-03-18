@@ -1,0 +1,29 @@
+name: Java CI with Maven
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Clone Repo
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java (JDK)
+        uses: actions/setup-java@v4
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: 🐳 Docker running (Testcontainers)
+        run: docker info
+
+      - name: 🧪 Run tests
+        # O comando 'verify' do Maven compila o código e roda todos os testes
+        run: mvn clean verify
