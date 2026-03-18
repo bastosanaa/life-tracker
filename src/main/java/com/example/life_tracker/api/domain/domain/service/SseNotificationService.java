@@ -57,7 +57,7 @@ public class SseNotificationService {
         try {
             emitWarningEvent(userId, emitter);
         } catch (Exception e) {
-            log.warn("Failed to send SSE warning. Removing user: {}", userId);
+            log.warn("Failed to send SSE warning. Removing user: {}", userId, e);
             disconnectUser(userId);
         }
     }

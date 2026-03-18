@@ -57,11 +57,11 @@ public class SessionManagerService {
         log.info("Time cycle expired for user {} in state {}", userId, state);
 
         switch (state) {
-            case SessionState.ACTIVE -> {
+            case ACTIVE -> {
                 if (onWarningCallback != null) onWarningCallback.accept(userId);
                 sessionCache.put(userId, SessionState.WARNED);
             }
-            case SessionState.WARNED -> {
+            case WARNED -> {
                 if (onExpirationCallback != null) onExpirationCallback.accept(userId);
                 sessionCache.invalidate(userId);
             }
