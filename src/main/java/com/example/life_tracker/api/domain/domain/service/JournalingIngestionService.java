@@ -5,6 +5,7 @@ import com.example.life_tracker.api.domain.domain.mapper.DailyInfoMapper;
 import com.example.life_tracker.api.domain.domain.PromptTemplates;
 import com.example.life_tracker.api.domain.domain.validator.DailyInfoValidator;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.converter.BeanOutputConverter;
 import org.springframework.ai.document.Document;
@@ -22,6 +23,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class JournalingIngestionService {
 
     private final ChatClient chatClient;
@@ -31,16 +33,15 @@ public class JournalingIngestionService {
 
     @Async
     public void ingest(String chatHistorySnapshot, UUID userId) {
-        System.out.println("Starting background consolidation...");
+        log.info("Starting background consolidation for user {}", userId);
 
         try {
             DailyInfo dailyInfo = extractMessageInfo(chatHistorySnapshot);
             dailyInfoValidator.validate(dailyInfo);
-            System.out.println(dailyInfo);
+            log.debug("Extracted DailyInfo: {}", dailyInfo);
             storeDailyInfo(dailyInfo, userId);
         } catch (Exception e) {
-            System.err.println("Error consolidating entry");
-            e.printStackTrace();
+            log.error("Error consolidating entry for user {}", userId, e);
             return;
         }
     }
