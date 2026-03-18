@@ -1,0 +1,19 @@
+# src/test/resources/application-test.yaml
+spring:
+  ai:
+    google:
+      genai:
+        api-key: "fake-key-for-tests"
+    vectorstore:
+      pgvector:
+        index-type: HNSW
+        distance-type: COSINE_DISTANCE
+        dimensions: 768
+        initialize-schema: true  # cria as tabelas automaticamente no container
+
+  docker:
+    compose:
+      enabled: false
+
+app:
+  mock-ai: true
